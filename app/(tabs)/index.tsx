@@ -7,7 +7,7 @@ import { Button, H1, H2, H3, KennelBadge, Note, Panel, Screen, st, Tile } from '
 import { colors } from '../../src/ui/theme';
 
 export default function Start() {
-  const { db, loadDemo } = useStore();
+  const { db, loadDemo, mode } = useStore();
   const t = today();
   const arrivals = arrivalsOn(db, t);
   const departures = departuresOn(db, t);
@@ -59,7 +59,7 @@ export default function Start() {
         )) : <Note>Brak nadchodzących rezerwacji.</Note>}
       </Panel>
       <View style={{ height: 4 }} />
-      <Text style={[st.note, { fontSize: 14, textAlign: 'center' }]}>Dane są zapisane tylko na tym urządzeniu. Rób kopię zapasową w Ustawieniach.</Text>
+      {mode === 'local' ? <Text style={[st.note, { fontSize: 14, textAlign: 'center' }]}>Dane są zapisane tylko na tym urządzeniu. Rób kopię zapasową w Ustawieniach.</Text> : null}
     </Screen>
   );
 }

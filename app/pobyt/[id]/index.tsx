@@ -24,15 +24,14 @@ export default function BookingDetails() {
   const change = async (status: BookingStatus, question: string, okLabel: string, destructive = false) => {
     if (status === 'reserved' && !isKennelFree(db, b.kennel, b.arrival, b.departure, b.id))
       return notify('Nie można przywrócić', `Boks ${b.kennel} jest już zajęty w tym terminie. Edytuj pobyt i wybierz inny boks.`);
-    if (await confirm(question, `${dogNames(db, b)} · boks ${b.kennel}`, okLabel, destructive)) setStatus(b.id, status);
+    if (await confirm(question, `${dogNames(db, b)} · boks ${b.kennel}`, okLabel, destructive)) await setStatus(b.id, status);
   };
 
   const pay = async () => {
     const n = Number(amount.replace(',', '.'));
     if (!Number.isFinite(n) || n === 0) return notify('Wpisz kwotę wpłaty', 'Np. 120 albo 120,50. Kwota ujemna oznacza zwrot.');
     if (await confirm(n > 0 ? 'Zapisać wpłatę?' : 'Zapisać zwrot?', pln(Math.abs(n)), 'Zapisz')) {
-      addPayment(b.id, n);
-      setAmount('');
+      if (await addPayment(b.id, n)) setAmount('');
     }
   };
 
