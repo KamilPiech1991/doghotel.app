@@ -60,8 +60,8 @@ Kopia zapasowa: Supabase w planie darmowym nie robi kopii do pobrania – co jak
 - **Kalendarz:** widok dnia (boksy 1–9) i tygodnia (siatka boks × dzień); dotknięcie wolnego pola tworzy rezerwację.
 - **Historia:** wszystkie pobyty od początku (także zakończone i anulowane), wyszukiwanie, filtry, miesiące,
   podsumowanie przychodu i wpłat.
-- **Klienci:** wyszukiwanie, karta klienta z psami (wielkość, waga, rasa, uwagi), historia pobytów, edycja i usuwanie.
-- **Pobyt:** wybór klienta i psów (1–2), terminu, wolnego boksu, uwagi, wycena z zaliczką; potwierdzanie przyjazdu/odbioru,
+- **Klienci:** eksport listy klientów i psów do Excela (.xlsx), wyszukiwanie, karta klienta z psami (wielkość, waga, rasa, uwagi), historia pobytów, edycja i usuwanie.
+- **Pobyt:** wybór klienta i psów (1–2), terminu (godziny przyjazdu i odbioru 08:00–20:30 co 30 min), wolnego boksu, uwagi, wycena z zaliczką; potwierdzanie przyjazdu/odbioru,
   wpłaty, edycja, anulowanie i przywracanie.
 - **Ustawienia:** cennik, zaliczka, czas na sprzątanie boksu, kopia zapasowa, dane przykładowe.
 

@@ -7,12 +7,10 @@ import { displayDate, isValidDateKey, localDateKey, localTime, parseLocal, plura
 import { depositFor, quote } from '../lib/pricing';
 import { Booking, Size, sizeLabel, sizes, uid } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
-import { Button, DateField, DogAvatar, DogColorPicker, Field, H1, H2, H3, Note, Panel, Row, Screen, st, Tile, TimeField, Warning } from '../ui/components';
+import { Button, DateField, DogAvatar, Field, H1, H2, H3, Note, Panel, Row, Screen, st, Tile, TimeGrid, Warning } from '../ui/components';
 import { dogColor, kennelColor, nextDogColor } from '../lib/colors';
 import { colors } from '../ui/theme';
 
-const arrivalHours = ['08:00', '10:00', '12:00', '15:00'];
-const departureHours = ['10:00', '12:00', '15:00', '18:00'];
 
 export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?: { ownerId?: string; kennel?: number; date?: string } }) {
   const { db, saveBooking, saveOwner, saveDog } = useStore();
@@ -31,7 +29,7 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
   const [changingOwner, setChangingOwner] = useState(!ownerId);
   const [newOwner, setNewOwner] = useState({ name: '', phone: '' });
   const [saving, setSaving] = useState(false);
-  const [newDog, setNewDog] = useState<{ name: string; size: Size; weight: string; color: string | null }>({ name: '', size: 'small', weight: '', color: null });
+  const [newDog, setNewDog] = useState<{ name: string; size: Size; weight: string }>({ name: '', size: 'small', weight: '' });
 
   const arrival = parseLocal(arrivalDate, arrivalTime);
   const departure = parseLocal(departureDate, departureTime);
@@ -61,10 +59,10 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
   const addDog = async () => {
     if (!ownerId) return notify('Najpierw wybierz klienta');
     if (!newDog.name.trim()) return notify('Wpisz imię psa');
-    const id = await saveDog({ ownerId, name: newDog.name.trim(), size: newDog.size, weight: newDog.weight.trim() || undefined, color: newDog.color ?? nextDogColor(db.dogs, ownerId) });
+    const id = await saveDog({ ownerId, name: newDog.name.trim(), size: newDog.size, weight: newDog.weight.trim() || undefined, color: nextDogColor(db.dogs, ownerId) });
     if (!id) return;
     setDogIds(p => [...p, id]);
-    setNewDog({ name: '', size: 'small', weight: '', color: null });
+    setNewDog({ name: '', size: 'small', weight: '' });
   };
 
   const save = async () => {
@@ -136,7 +134,6 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
             <Text style={st.label}>Wielkość (wymagana)</Text>
             <Row>{sizes.map(s => <Tile key={s} label={sizeLabel[s]} active={newDog.size === s} onPress={() => setNewDog(p => ({ ...p, size: s }))} style={{ flex: 1 }} />)}</Row>
             <Field label="Waga w kg (opcjonalnie)" value={newDog.weight} onChange={weight => setNewDog(p => ({ ...p, weight }))} keyboardType="decimal-pad" />
-            <DogColorPicker value={newDog.color ?? nextDogColor(db.dogs, ownerId)} onChange={color => setNewDog(p => ({ ...p, color }))} />
             <Button title="+ Dodaj i zaznacz psa" kind="outline" onPress={addDog} />
           </Panel>
         </>
@@ -145,15 +142,11 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
       <H2>3. Termin</H2>
       <Panel>
         <DateField label="Dzień przyjazdu" value={arrivalDate} onChange={setArrivalDate} />
-        <Text style={st.label}>Godzina przyjazdu</Text>
-        <Row>{arrivalHours.map(h => <Tile key={h} label={h} active={arrivalTime === h} onPress={() => setArrivalTime(h)} style={{ flex: 1, minWidth: 70 }} />)}</Row>
-        <TimeField label="Inna godzina przyjazdu" value={arrivalTime} onChange={setArrivalTime} />
+        <TimeGrid label="Godzina przyjazdu" value={arrivalTime} onChange={setArrivalTime} />
       </Panel>
       <Panel>
         <DateField label="Dzień odbioru" value={departureDate} onChange={setDepartureDate} />
-        <Text style={st.label}>Godzina odbioru</Text>
-        <Row>{departureHours.map(h => <Tile key={h} label={h} active={departureTime === h} onPress={() => setDepartureTime(h)} style={{ flex: 1, minWidth: 70 }} />)}</Row>
-        <TimeField label="Inna godzina odbioru" value={departureTime} onChange={setDepartureTime} />
+        <TimeGrid label="Godzina odbioru" value={departureTime} onChange={setDepartureTime} />
       </Panel>
       {!intervalOk ? <Warning>Podaj poprawny termin – odbiór musi być później niż przyjazd.</Warning> : null}
 

@@ -3,7 +3,8 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Vie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors } from './theme';
-import { dogColor, dogPalette, kennelColor } from '../lib/colors';
+import { dogColor, kennelColor } from '../lib/colors';
+import { hourOptions } from '../lib/dates';
 import { Dog } from '../lib/types';
 
 export function AppHeader({ title, back }: { title?: string; back?: boolean }) {
@@ -108,9 +109,28 @@ export function DateField({ label, value, onChange }: { label: string; value: st
   return <Field label={`${label} (RRRR-MM-DD)`} value={value} onChange={onChange} placeholder="2026-12-24" />;
 }
 
-export function TimeField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  if (Platform.OS === 'web') return <WebPicker type="time" label={label} value={value} onChange={onChange} />;
-  return <Field label={`${label} (GG:MM)`} value={value} onChange={onChange} placeholder="10:00" />;
+/** Wybór godziny kafelkami. Godzina spoza listy (np. ze starej rezerwacji) jest pokazana jako dodatkowy kafelek. */
+export function TimeGrid({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const options = hourOptions.includes(value) || !value ? hourOptions : [value, ...hourOptions];
+  return (
+    <View style={{ gap: 7 }} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      <Text style={st.label}>{label}</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+        {options.map(h => (
+          <Pressable
+            key={h}
+            accessibilityRole="radio"
+            accessibilityLabel={`${label}: ${h}`}
+            accessibilityState={{ checked: h === value }}
+            onPress={() => onChange(h)}
+            style={({ pressed }) => [st.hour, h === value && st.tileActive, pressed && { opacity: 0.8 }]}
+          >
+            <Text style={[st.hourText, h === value && { color: colors.white }]}>{h}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 export function Tile({ label, sub, active, onPress, disabled = false, style, leading, activeColor, tint, borderColor }: {
@@ -180,32 +200,6 @@ export function DogAvatars({ dogs, size = 36 }: { dogs: Pick<Dog, 'id' | 'name' 
   );
 }
 
-/** Wybór koloru psa. */
-export function DogColorPicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
-  return (
-    <View style={{ gap: 7 }}>
-      <Text style={st.label}>Kolor psa</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-        {dogPalette.map(c => {
-          const on = c.id === value;
-          return (
-            <Pressable
-              key={c.id}
-              accessibilityRole="radio"
-              accessibilityLabel={`Kolor ${c.name}`}
-              accessibilityState={{ checked: on }}
-              onPress={() => onChange(c.id)}
-              style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: c.hex, alignItems: 'center', justifyContent: 'center', borderWidth: on ? 4 : 0, borderColor: colors.ink }}
-            >
-              {on ? <Text style={{ color: colors.white, fontSize: 20, fontWeight: '900' }}>✓</Text> : null}
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
 export const Panel = ({ children, style }: { children: React.ReactNode; style?: ViewStyle }) => <View style={[st.panel, style]}>{children}</View>;
 export const H1 = ({ children }: { children: React.ReactNode }) => <Text style={st.h1} accessibilityRole="header">{children}</Text>;
 export const H2 = ({ children }: { children: React.ReactNode }) => <Text style={st.h2} accessibilityRole="header">{children}</Text>;
@@ -236,6 +230,8 @@ export const st = StyleSheet.create({
   label: { fontSize: 17, fontWeight: '700', color: colors.ink },
   input: { backgroundColor: colors.white, borderColor: colors.inputBorder, borderWidth: 1.5, borderRadius: 13, minHeight: 60, paddingHorizontal: 15, fontSize: 19, color: colors.ink },
   tile: { borderWidth: 1.5, borderColor: '#9DB7A7', backgroundColor: colors.white, borderRadius: 13, minHeight: 58, padding: 9, justifyContent: 'center', alignItems: 'center' },
+  hour: { width: '23.5%', minHeight: 48, borderRadius: 11, borderWidth: 1.5, borderColor: '#9DB7A7', backgroundColor: colors.white, justifyContent: 'center', alignItems: 'center' },
+  hourText: { fontSize: 17, fontWeight: '700', color: colors.ink },
   tileRow: { flexDirection: 'row', justifyContent: 'flex-start', gap: 12, paddingHorizontal: 12 },
   tileActive: { backgroundColor: colors.green, borderColor: colors.green },
   tileDisabled: { backgroundColor: colors.disabled, borderColor: '#C7CDC8' },
