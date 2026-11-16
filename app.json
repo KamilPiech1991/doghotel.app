@@ -1,1 +1,0 @@
-{"expo":{"name":"Psotelgracja","slug":"psotelgracja-voice","scheme":"psotelgracja","version":"1.0.0","orientation":"portrait","plugins":[["expo-audio",{"microphonePermission":"Psotelgracja potrzebuje mikrofonu, aby dodać pobyt psa głosowo.","enableBackgroundRecording":false}]],"ios":{"supportsTablet":true},"android":{"permissions":["RECORD_AUDIO"]}}}
