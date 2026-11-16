@@ -30,6 +30,9 @@ jobs:
       - run: npm run build:web
         env:
           EXPO_BASE_URL: /${{ github.event.repository.name }}
+          # Settings → Secrets and variables → Actions → Variables. Bez nich aplikacja działa w trybie lokalnym.
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ vars.SUPABASE_KEY }}
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:

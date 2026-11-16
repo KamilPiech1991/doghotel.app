@@ -8,12 +8,13 @@ import { Dog, Size, sizeLabel, sizes, statusLabel } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
 import { Button, DogAvatar, DogColorPicker, Field, H1, H2, H3, KennelBadge, Note, Panel, Row, Screen, st, Tile } from '../ui/components';
 import { dogColor, nextDogColor } from '../lib/colors';
+import { dogStays } from '../lib/history';
 import { View } from 'react-native';
 
 type DogDraft = { id?: string; name: string; size: Size; weight: string; breed: string; notes: string; color: string };
 const emptyDog = (color: string): DogDraft => ({ name: '', size: 'small', weight: '', breed: '', notes: '', color });
 
-export function DogForm({ initial, onSave, onCancel, saveLabel }: { initial: DogDraft; onSave: (d: DogDraft) => void; onCancel?: () => void; saveLabel: string }) {
+export function DogForm({ initial, onSave, onCancel, saveLabel }: { initial: DogDraft; onSave: (d: DogDraft) => Promise<boolean>; onCancel?: () => void; saveLabel: string }) {
   const [d, setD] = useState(initial);
   const set = (patch: Partial<DogDraft>) => setD(p => ({ ...p, ...patch }));
   return (
@@ -25,10 +26,10 @@ export function DogForm({ initial, onSave, onCancel, saveLabel }: { initial: Dog
       <Field label="Rasa (opcjonalnie)" value={d.breed} onChange={breed => set({ breed })} />
       <Field label="Uwagi: karmienie, leki, zachowanie (opcjonalnie)" value={d.notes} onChange={notes => set({ notes })} multiline />
       <DogColorPicker value={d.color} onChange={color => set({ color })} />
-      <Button title={saveLabel} kind="outline" onPress={() => {
+      <Button title={saveLabel} kind="outline" onPress={async () => {
         if (!d.name.trim()) return notify('Wpisz imię psa');
-        onSave({ ...d, name: d.name.trim() });
-        if (!d.id) setD(emptyDog(d.color));
+        const ok = await onSave({ ...d, name: d.name.trim() });
+        if (ok && !d.id) setD(emptyDog(d.color));
       }} />
       {onCancel ? <Button title="Anuluj" kind="outline" onPress={onCancel} /> : null}
     </>
@@ -55,9 +56,10 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
   const dogs = db.dogs.filter(d => d.ownerId === ownerId);
   const history = db.bookings.filter(b => b.ownerId === ownerId).sort((a, b) => b.arrival.localeCompare(a.arrival));
 
-  const save = () => {
+  const save = async () => {
     if (!name.trim()) return notify('Wpisz imię i nazwisko klienta');
-    const id = saveOwner({ id: ownerId, name: name.trim(), phone: phone.trim(), notes: notes.trim() || undefined });
+    const id = await saveOwner({ id: ownerId, name: name.trim(), phone: phone.trim(), notes: notes.trim() || undefined });
+    if (!id) return;
     if (!ownerId) router.replace(`/klient/${id}`);
     else notify('Zapisano dane klienta');
   };
@@ -65,14 +67,13 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
   const remove = async () => {
     if (!canDeleteOwner(db, ownerId!)) return notify('Nie można usunąć', 'Ten klient ma zapisane pobyty. Usunięcie skasowałoby historię rezerwacji.');
     if (await confirm('Usunąć klienta?', `${owner!.name} i wszystkie jego psy zostaną usunięte.`, 'Usuń', true)) {
-      deleteOwner(ownerId!);
-      router.back();
+      if (await deleteOwner(ownerId!)) router.back();
     }
   };
 
   const removeDog = async (d: Dog) => {
     if (!canDeleteDog(db, d.id)) return notify('Nie można usunąć', `${d.name} ma zapisane pobyty.`);
-    if (await confirm(`Usunąć psa ${d.name}?`, 'Tej czynności nie można cofnąć.', 'Usuń', true)) deleteDog(d.id);
+    if (await confirm(`Usunąć psa ${d.name}?`, 'Tej czynności nie można cofnąć.', 'Usuń', true)) await deleteDog(d.id);
   };
 
   return (
@@ -92,7 +93,7 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
           {dogs.map(d => (
             <Panel key={d.id}>
               {editingDog === d.id ? (
-                <DogForm initial={toDraft(d)} saveLabel="Zapisz psa" onCancel={() => setEditingDog(null)} onSave={x => { saveDog(fromDraft(owner.id, x)); setEditingDog(null); }} />
+                <DogForm initial={toDraft(d)} saveLabel="Zapisz psa" onCancel={() => setEditingDog(null)} onSave={async x => { const ok = !!(await saveDog(fromDraft(owner.id, x))); if (ok) setEditingDog(null); return ok; }} />
               ) : (
                 <>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -101,6 +102,7 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
                   </View>
                   <Note>{sizeLabel[d.size]}{d.weight ? ` · ${d.weight} kg` : ''}{d.breed ? ` · ${d.breed}` : ''}</Note>
                   {d.notes ? <Note>Uwagi: {d.notes}</Note> : null}
+                  {(() => { const stays = dogStays(db, d.id); return <Note>{stays.length ? `Pobytów: ${stays.length} · ostatni: ${displayDate(stays[0].arrival).slice(0, 10)}` : 'Jeszcze nie było u nas.'}</Note>; })()}
                   <Row>
                     <Button title="Edytuj" kind="outline" onPress={() => setEditingDog(d.id)} style={{ flex: 1 }} />
                     <Button title="Usuń" kind="outline" onPress={() => removeDog(d)} style={{ flex: 1 }} />
@@ -111,7 +113,7 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
           ))}
           <Panel>
             <H3>Dodaj psa</H3>
-            <DogForm key={dogs.length} initial={emptyDog(nextDogColor(db.dogs, owner.id))} saveLabel="+ Dodaj psa" onSave={x => saveDog(fromDraft(owner.id, x))} />
+            <DogForm key={dogs.length} initial={emptyDog(nextDogColor(db.dogs, owner.id))} saveLabel="+ Dodaj psa" onSave={async x => !!(await saveDog(fromDraft(owner.id, x)))} />
           </Panel>
 
           <H2>Historia pobytów ({history.length})</H2>

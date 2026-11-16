@@ -30,6 +30,7 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
   const [ownerSearch, setOwnerSearch] = useState('');
   const [changingOwner, setChangingOwner] = useState(!ownerId);
   const [newOwner, setNewOwner] = useState({ name: '', phone: '' });
+  const [saving, setSaving] = useState(false);
   const [newDog, setNewDog] = useState<{ name: string; size: Size; weight: string; color: string | null }>({ name: '', size: 'small', weight: '', color: null });
 
   const arrival = parseLocal(arrivalDate, arrivalTime);
@@ -49,16 +50,19 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
 
   const chooseOwner = (id: string) => { setOwnerId(id); setDogIds([]); setChangingOwner(false); setOwnerSearch(''); };
 
-  const addOwner = () => {
+  const addOwner = async () => {
     if (!newOwner.name.trim()) return notify('Wpisz imię i nazwisko klienta');
-    chooseOwner(saveOwner({ name: newOwner.name.trim(), phone: newOwner.phone.trim() }));
+    const id = await saveOwner({ name: newOwner.name.trim(), phone: newOwner.phone.trim() });
+    if (!id) return;
+    chooseOwner(id);
     setNewOwner({ name: '', phone: '' });
   };
 
-  const addDog = () => {
+  const addDog = async () => {
     if (!ownerId) return notify('Najpierw wybierz klienta');
     if (!newDog.name.trim()) return notify('Wpisz imię psa');
-    const id = saveDog({ ownerId, name: newDog.name.trim(), size: newDog.size, weight: newDog.weight.trim() || undefined, color: newDog.color ?? nextDogColor(db.dogs, ownerId) });
+    const id = await saveDog({ ownerId, name: newDog.name.trim(), size: newDog.size, weight: newDog.weight.trim() || undefined, color: newDog.color ?? nextDogColor(db.dogs, ownerId) });
+    if (!id) return;
     setDogIds(p => [...p, id]);
     setNewDog({ name: '', size: 'small', weight: '', color: null });
   };
@@ -83,8 +87,10 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
       notes: notes.trim() || undefined,
       createdAt: editing?.createdAt ?? new Date().toISOString(),
     };
-    saveBooking(b);
-    router.replace(`/pobyt/${b.id}`);
+    setSaving(true);
+    const saved = await saveBooking(b);
+    setSaving(false);
+    if (saved) router.replace(`/pobyt/${b.id}`);
   };
 
   if (bookingId && !editing) return <Screen back title="Pobyt"><Note>Nie znaleziono pobytu.</Note></Screen>;
@@ -173,7 +179,7 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
         <Text style={{ fontSize: 30, fontWeight: '900', color: colors.green }}>{pricing.total === null ? 'Wycena niekompletna' : pln(pricing.total)}</Text>
         {pricing.total !== null ? <Note>Zaliczka ({db.settings.depositPercent}%): {pln(depositFor(pricing.total, db.settings.depositPercent))}</Note> : null}
       </Panel>
-      <Button title={editing ? '✓ Zapisz zmiany' : '✓ Zapisz pobyt'} onPress={save} />
+      <Button title={saving ? 'Zapisywanie…' : editing ? '✓ Zapisz zmiany' : '✓ Zapisz pobyt'} onPress={save} disabled={saving} />
       <Button title="Anuluj" kind="outline" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
     </Screen>
   );

@@ -50,7 +50,7 @@ export function Button({ title, onPress, kind = 'primary', disabled = false, sty
 
 export function Field({ label, value, onChange, placeholder, keyboardType, multiline, onBlur }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string;
-  keyboardType?: 'default' | 'phone-pad' | 'numeric' | 'decimal-pad'; multiline?: boolean; onBlur?: () => void;
+  keyboardType?: 'default' | 'phone-pad' | 'numeric' | 'decimal-pad' | 'email-address'; multiline?: boolean; onBlur?: () => void;
 }) {
   return (
     <View style={st.field}>
@@ -63,6 +63,8 @@ export function Field({ label, value, onChange, placeholder, keyboardType, multi
         placeholder={placeholder}
         placeholderTextColor="#81948A"
         keyboardType={keyboardType ?? 'default'}
+        autoCapitalize={keyboardType === 'email-address' ? 'none' : undefined}
+        autoCorrect={keyboardType === 'email-address' ? false : undefined}
         multiline={multiline}
         style={[st.input, multiline && { minHeight: 96, paddingTop: 14, textAlignVertical: 'top' }]}
       />
