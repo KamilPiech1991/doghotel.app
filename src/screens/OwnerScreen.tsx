@@ -8,6 +8,7 @@ import { Dog, Size, sizeLabel, sizes, statusLabel } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
 import { Button, DogAvatar, DogColorPicker, Field, H1, H2, H3, KennelBadge, Note, Panel, Row, Screen, st, Tile } from '../ui/components';
 import { dogColor, nextDogColor } from '../lib/colors';
+import { dogStays } from '../lib/history';
 import { View } from 'react-native';
 
 type DogDraft = { id?: string; name: string; size: Size; weight: string; breed: string; notes: string; color: string };
@@ -101,6 +102,7 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
                   </View>
                   <Note>{sizeLabel[d.size]}{d.weight ? ` · ${d.weight} kg` : ''}{d.breed ? ` · ${d.breed}` : ''}</Note>
                   {d.notes ? <Note>Uwagi: {d.notes}</Note> : null}
+                  {(() => { const stays = dogStays(db, d.id); return <Note>{stays.length ? `Pobytów: ${stays.length} · ostatni: ${displayDate(stays[0].arrival).slice(0, 10)}` : 'Jeszcze nie było u nas.'}</Note>; })()}
                   <Row>
                     <Button title="Edytuj" kind="outline" onPress={() => setEditingDog(d.id)} style={{ flex: 1 }} />
                     <Button title="Usuń" kind="outline" onPress={() => removeDog(d)} style={{ flex: 1 }} />

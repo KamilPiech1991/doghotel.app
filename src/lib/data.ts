@@ -34,12 +34,15 @@ export const demoDb = (): DB => {
     const arrival = parseLocal(plusDays(t, a), at)!;
     const departure = parseLocal(plusDays(t, d), dt)!;
     const total = quote(db.settings, db.dogs.filter(x => dogIds.includes(x.id)), arrival, departure).total ?? 0;
-    return { id, ownerId, dogIds, kennel, status, arrival, departure, total, deposit: depositFor(total, db.settings.depositPercent), paid: 0, createdAt: new Date().toISOString() };
+    return { id, ownerId, dogIds, kennel, status, arrival, departure, total, deposit: depositFor(total, db.settings.depositPercent), paid: status === 'checked_out' ? total : 0, createdAt: new Date().toISOString() };
   };
   db.bookings = [
     mk('b1', 'o1', ['d1', 'd2'], 1, -1, '10:00', 2, '15:00', 'checked_in'),
     mk('b2', 'o2', ['d3'], 2, 0, '12:00', 3, '12:00', 'reserved'),
     mk('b3', 'o3', ['d4'], 3, 2, '10:00', 5, '18:00', 'reserved'),
+    mk('b4', 'o2', ['d3'], 4, -40, '10:00', -35, '15:00', 'checked_out'),
+    mk('b5', 'o1', ['d1'], 5, -70, '12:00', -66, '12:00', 'checked_out'),
+    mk('b6', 'o3', ['d4'], 2, -20, '10:00', -18, '10:00', 'cancelled'),
   ];
   return db;
 };

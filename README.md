@@ -21,6 +21,8 @@ pojawiają się automatycznie. Każda osoba loguje się swoim e-mailem i hasłem
 
 ## Podłączenie bazy Supabase (jednorazowo, ok. 15 minut)
 
+📄 **Szczegółowa instrukcja krok po kroku: [docs/instrukcja-supabase.md](docs/instrukcja-supabase.md)** (także: przeglądanie starych danych, kopie zapasowe, nowi pracownicy).
+
 1. **Projekt:** wejdź na [supabase.com](https://supabase.com) → *New project*. Region: **Central EU (Frankfurt)**
    (dane klientów zostają w UE). Zapisz hasło do bazy w bezpiecznym miejscu.
 2. **Tabele:** w projekcie otwórz *SQL Editor* → *New query*, wklej całą zawartość pliku
@@ -56,6 +58,8 @@ Kopia zapasowa: Supabase w planie darmowym nie robi kopii do pobrania – co jak
 
 - **Start:** zajętość boksów teraz, dzisiejsze przyjazdy i odbiory, najbliższe rezerwacje.
 - **Kalendarz:** widok dnia (boksy 1–9) i tygodnia (siatka boks × dzień); dotknięcie wolnego pola tworzy rezerwację.
+- **Historia:** wszystkie pobyty od początku (także zakończone i anulowane), wyszukiwanie, filtry, miesiące,
+  podsumowanie przychodu i wpłat.
 - **Klienci:** wyszukiwanie, karta klienta z psami (wielkość, waga, rasa, uwagi), historia pobytów, edycja i usuwanie.
 - **Pobyt:** wybór klienta i psów (1–2), terminu, wolnego boksu, uwagi, wycena z zaliczką; potwierdzanie przyjazdu/odbioru,
   wpłaty, edycja, anulowanie i przywracanie.
