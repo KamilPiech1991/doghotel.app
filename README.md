@@ -1,41 +1,69 @@
-# Psotelgracja · prototyp mobilny Expo
+# 🐾 Psotelgracja – aplikacja hotelu dla psów
 
-**Stan:** działający lokalny prototyp do testów UX, NIE system produkcyjny hotelu. Obsługuje Android i iOS.
+Aplikacja do obsługi hotelu dla psów: rezerwacje 9 boksów, klienci i ich psy, przyjazdy i odbiory, wpłaty, cennik.
+Na tym etapie działa **jako aplikacja webowa (PWA)** otwierana w przeglądarce telefonu i dodawana do ekranu głównego.
+Kod jest napisany w Expo (React Native), więc później można z niego zbudować aplikację na Androida/iPhone'a bez przepisywania.
 
-## Uruchomienie
+## Jak korzystać na telefonie
 
-Wymagane: Node.js 20+, npm, aplikacja Expo Go (dla wersji zgodnej z SDK) lub development build.
+1. Otwórz adres aplikacji (GitHub Pages, np. `https://kamilpiech1991.github.io/doghotel.app/`).
+2. Dodaj do ekranu głównego:
+   - **Android (Chrome):** menu ⋮ → *Dodaj do ekranu głównego* / *Zainstaluj aplikację*.
+   - **iPhone (Safari):** przycisk *Udostępnij* → *Do ekranu początkowego*.
+3. Uruchamiaj aplikację z ikony 🐾 – działa wtedy na pełnym ekranie, jak zwykła aplikacja.
+
+> ⚠️ **Dane są zapisywane tylko na tym telefonie, w tej przeglądarce.** Nie ma jeszcze serwera ani synchronizacji
+> między telefonami. Regularnie rób kopię: **Ustawienia → Pobierz kopię zapasową** i zapisuj plik np. na Dysku Google.
+> Kopię można wczytać na innym telefonie (**Przywróć z pliku**).
+
+## Funkcje
+
+- **Start:** zajętość boksów teraz, dzisiejsze przyjazdy i odbiory, najbliższe rezerwacje.
+- **Kalendarz:** widok dnia (boksy 1–9) i tygodnia (siatka boks × dzień); dotknięcie wolnego pola tworzy rezerwację.
+- **Klienci:** wyszukiwanie, karta klienta z psami (wielkość, waga, rasa, uwagi), historia pobytów, edycja i usuwanie.
+- **Pobyt:** wybór klienta i psów (1–2), terminu, wolnego boksu, uwagi, wycena z zaliczką; potwierdzanie przyjazdu/odbioru,
+  wpłaty, edycja, anulowanie i przywracanie.
+- **Ustawienia:** cennik, zaliczka, czas na sprzątanie boksu, kopia zapasowa, dane przykładowe.
+
+### Zasady do zatwierdzenia z hotelem
+
+Cennik 70/80/100 zł, doba = rozpoczęte 24 h od przyjazdu, −50% na mniejszego z dwóch psów, brak reguły dla 3+ psów,
+30% zaliczki, 60 min na sprzątanie – to wartości przykładowe z prototypu (`src/lib/pricing.ts`, `src/lib/data.ts`).
+
+## Dla programisty
+
+Wymagany Node.js 20+.
 
 ```bash
 npm install
-npx expo start
+npm run web          # podgląd w przeglądarce (http://localhost:8081)
+npm test             # testy logiki rezerwacji i wyceny
+npm run typecheck
+npm run build:web    # statyczna strona do katalogu dist/
 ```
 
-Uruchom aplikację na telefonie poprzez Expo Go. Jeśli SDK Expo Go nie jest zgodne, użyj development build (`npx expo run:android` / `npx expo run:ios` z odpowiednim środowiskiem).
+Struktura:
 
-## Działające funkcje prototypu
-- 4 zakładki: Start, Boksy, Klienci, Pobyty.
-- Dodawanie właścicieli i psów, waga opcjonalna, trzy rozmiary.
-- Rezerwacje 1–2 psów tego samego właściciela, 9 boksów, kontrola nakładania dat.
-- Edycja i anulowanie rezerwacji.
-- Kalendarz dzienny boksów.
-- Dane demonstracyjne i zapis lokalny przez AsyncStorage.
-- Uprawnienia mikrofonu i rzeczywiste nagrywanie przez expo-audio.
-- Tekstowy parser DEMO: imiona Luna, Borys, Reksio, Figa, daty DD.MM, godziny i numer boksu; wypełnia szkic do zatwierdzenia.
+```
+app/                 ekrany (expo-router, każdy plik = adres URL)
+  (tabs)/            zakładki: Start, Kalendarz, Klienci, Ustawienia
+  pobyt/             nowy pobyt, szczegóły, edycja
+  klient/            nowy klient, karta klienta
+src/lib/             logika bez interfejsu (daty, dostępność boksów, wycena, dane) + testy
+src/screens/         większe ekrany współdzielone przez kilka adresów
+src/ui/              komponenty, kolory, okna dialogowe
+src/store.tsx        stan aplikacji i zapis w pamięci urządzenia
+scripts/             uzupełnienie strony o dane PWA po buildzie
+```
 
-## Co jest celowo NIEZAIMPLEMENTOWANE
-- Transkrypcja nagrania (speech-to-text), AI, integracja Supabase, konta użytkowników, synchronizacja między telefonami, push, płatności, realne ceny świąteczne, automatyczne rozliczenia.
-- Nie ma gwarancji transakcyjnej między urządzeniami: zapis lokalny służy tylko do testowania UX.
-- Ceny 70/80/100 zł to przykładowe liczby, NIE zweryfikowany cennik hotelu. Naliczanie pełnych dób jest uproszczeniem, NIE zatwierdzonym regulaminem. Nie używać do rzeczywistych rozliczeń.
-- Rabat dla 3+ psów wymaga decyzji biznesowej i jest zablokowany.
-- Wybór dat to na razie duże pola tekstowe w formacie RRRR-MM-DD. Docelowo należy wdrożyć natywny kalendarz i widoki tygodnia/miesiąca.
-- Brak pojemności poszczególnych boksów i bufora sprzątania: do wdrożenia po ustaleniu reguł.
+### Publikacja
 
-## Architektura kolejnego etapu
-- Supabase Auth + RLS, PostgreSQL (owners, dogs, bookings, kennel_assignments, price_rules, payments, audit_log).
-- Funkcja transakcyjna PostgreSQL `confirm_reservation` z blokadą boksu, ponowną kontrolą dostępności, idempotencją.
-- Backend voice: audio -> STT PL -> schemat JSON -> identyfikacja psa/właściciela -> walidacja -> podgląd -> zatwierdzenie.
-- Ceny wylicza backend, nie model AI.
+Workflow `.github/workflows/deploy.yml` przy każdym pushu na `main` uruchamia testy, buduje stronę i publikuje ją
+na GitHub Pages. Jednorazowo trzeba włączyć: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
-## Prywatność
-Nagrania pozostają na urządzeniu, prototyp nie przesyła ich na serwer. Dane demonstracyjne są zapisywane lokalnie bez produkcyjnego szyfrowania. Nie wprowadzaj prawdziwych danych klientów do tego prototypu.
+## Kolejne etapy
+
+1. Backend (Supabase): logowanie, wspólne dane dla kilku telefonów, zatwierdzanie rezerwacji po stronie serwera.
+2. Dodawanie pobytu głosem (rozpoznawanie mowy po polsku + szkic rezerwacji do zatwierdzenia).
+3. Okresy specjalne w cenniku (święta) w ustawieniach, przypomnienia SMS, raporty.
+4. Aplikacja na Androida/iPhone'a z tego samego kodu (EAS Build).
