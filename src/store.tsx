@@ -3,6 +3,7 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Booking, BookingStatus, DB, Dog, Owner, Settings, uid } from './lib/types';
 import { demoDb, emptyDb, LEGACY_KEYS, migrate, STORAGE_KEY } from './lib/data';
+import { nextDogColor } from './lib/colors';
 import { notify } from './ui/dialog';
 import { colors } from './ui/theme';
 
@@ -72,7 +73,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const saveDog = useCallback<Store['saveDog']>(d => {
     const id = d.id ?? uid();
-    setDb(p => ({ ...p, dogs: d.id ? p.dogs.map(x => (x.id === id ? { ...x, ...d, id } : x)) : [...p.dogs, { ...d, id }] }));
+    setDb(p => ({
+      ...p,
+      dogs: d.id
+        ? p.dogs.map(x => (x.id === id ? { ...x, ...d, id } : x))
+        : [...p.dogs, { ...d, id, color: d.color ?? nextDogColor(p.dogs, d.ownerId) }],
+    }));
     return id;
   }, []);
 

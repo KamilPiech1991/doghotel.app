@@ -6,7 +6,8 @@ import { dogNames, isKennelFree } from '../../../src/lib/booking';
 import { displayDate, pln } from '../../../src/lib/dates';
 import { BookingStatus, sizeLabel, statusLabel } from '../../../src/lib/types';
 import { confirm, notify } from '../../../src/ui/dialog';
-import { Button, Field, H1, H2, H3, Note, Panel, Row, Screen, Warning } from '../../../src/ui/components';
+import { Button, DogAvatar, DogAvatars, Field, H1, H2, H3, KennelBadge, Note, Panel, Row, Screen, Warning } from '../../../src/ui/components';
+import { View } from 'react-native';
 import { colors } from '../../../src/ui/theme';
 
 export default function BookingDetails() {
@@ -37,10 +38,16 @@ export default function BookingDetails() {
 
   return (
     <Screen back title="Szczegóły pobytu">
-      <H1>{dogNames(db, b)}</H1>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <DogAvatars dogs={dogs} size={48} />
+        <View style={{ flex: 1 }}><H1>{dogNames(db, b)}</H1></View>
+      </View>
       <Panel>
         <Text style={{ fontSize: 18, fontWeight: '800', color: b.status === 'cancelled' ? colors.red : colors.green }}>{statusLabel[b.status]}</Text>
-        <H3>Boks {b.kennel}</H3>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <KennelBadge n={b.kennel} size={44} />
+          <H3>Boks {b.kennel}</H3>
+        </View>
         <Note>Przyjazd: {displayDate(b.arrival)}{'\n'}Odbiór: {displayDate(b.departure)}</Note>
         {b.notes ? <Note>Uwagi: {b.notes}</Note> : null}
       </Panel>
@@ -54,7 +61,12 @@ export default function BookingDetails() {
         <H2>Klient</H2>
         <H3>{owner?.name ?? '(usunięty klient)'}</H3>
         {owner?.phone ? <Button title={`📞 Zadzwoń: ${owner.phone}`} kind="outline" onPress={() => Linking.openURL(`tel:${owner.phone.replace(/\s/g, '')}`)} /> : null}
-        {dogs.map(d => <Note key={d.id}>🐾 {d.name} · {sizeLabel[d.size]}{d.weight ? ` · ${d.weight} kg` : ''}{d.notes ? `\n    ${d.notes}` : ''}</Note>)}
+        {dogs.map(d => (
+          <View key={d.id} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
+            <DogAvatar dog={d} />
+            <View style={{ flex: 1 }}><Note>{d.name} · {sizeLabel[d.size]}{d.weight ? ` · ${d.weight} kg` : ''}{d.notes ? `\n${d.notes}` : ''}</Note></View>
+          </View>
+        ))}
         {owner ? <Button title="Karta klienta" kind="outline" onPress={() => router.push(`/klient/${owner.id}`)} /> : null}
       </Panel>
 

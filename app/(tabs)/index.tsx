@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { useStore } from '../../src/store';
 import { arrivalsOn, departuresOn, dogNames, occupiedKennelsAt, ownerName, upcoming } from '../../src/lib/booking';
 import { displayDate, displayDay, localTime, today } from '../../src/lib/dates';
-import { Button, H1, H2, H3, Note, Panel, Screen, st, Tile } from '../../src/ui/components';
+import { Button, H1, H2, H3, KennelBadge, Note, Panel, Screen, st, Tile } from '../../src/ui/components';
 import { colors } from '../../src/ui/theme';
 
 export default function Start() {
@@ -41,21 +41,21 @@ export default function Start() {
       <Panel>
         <H2>Dziś przyjazdy ({arrivals.length})</H2>
         {arrivals.length ? arrivals.map(b => (
-          <Tile key={b.id} label={`${localTime(b.arrival)} · ${dogNames(db, b)}`} sub={`Boks ${b.kennel} · ${ownerName(db, b.ownerId)}`} onPress={() => open(b.id)} />
+          <Tile key={b.id} leading={<KennelBadge n={b.kennel} />} label={`${localTime(b.arrival)} · ${dogNames(db, b)}`} sub={`Boks ${b.kennel} · ${ownerName(db, b.ownerId)}`} onPress={() => open(b.id)} />
         )) : <Note>Brak przyjazdów.</Note>}
       </Panel>
 
       <Panel>
         <H2>Dziś odbiory ({departures.length})</H2>
         {departures.length ? departures.map(b => (
-          <Tile key={b.id} label={`${localTime(b.departure)} · ${dogNames(db, b)}`} sub={`Boks ${b.kennel} · ${ownerName(db, b.ownerId)}`} onPress={() => open(b.id)} />
+          <Tile key={b.id} leading={<KennelBadge n={b.kennel} />} label={`${localTime(b.departure)} · ${dogNames(db, b)}`} sub={`Boks ${b.kennel} · ${ownerName(db, b.ownerId)}`} onPress={() => open(b.id)} />
         )) : <Note>Brak odbiorów.</Note>}
       </Panel>
 
       <Panel>
         <H3>Najbliższe rezerwacje</H3>
         {next.length ? next.map(b => (
-          <Tile key={b.id} label={dogNames(db, b)} sub={`Boks ${b.kennel} · od ${displayDate(b.arrival)}`} onPress={() => open(b.id)} />
+          <Tile key={b.id} leading={<KennelBadge n={b.kennel} />} label={dogNames(db, b)} sub={`Boks ${b.kennel} · od ${displayDate(b.arrival)}`} onPress={() => open(b.id)} />
         )) : <Note>Brak nadchodzących rezerwacji.</Note>}
       </Panel>
       <View style={{ height: 4 }} />

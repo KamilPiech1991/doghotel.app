@@ -6,10 +6,12 @@ import { canDeleteDog, canDeleteOwner, dogNames } from '../lib/booking';
 import { displayDate } from '../lib/dates';
 import { Dog, Size, sizeLabel, sizes, statusLabel } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
-import { Button, Field, H1, H2, H3, Note, Panel, Row, Screen, st, Tile } from '../ui/components';
+import { Button, DogAvatar, DogColorPicker, Field, H1, H2, H3, KennelBadge, Note, Panel, Row, Screen, st, Tile } from '../ui/components';
+import { dogColor, nextDogColor } from '../lib/colors';
+import { View } from 'react-native';
 
-type DogDraft = { id?: string; name: string; size: Size; weight: string; breed: string; notes: string };
-const emptyDog: DogDraft = { name: '', size: 'small', weight: '', breed: '', notes: '' };
+type DogDraft = { id?: string; name: string; size: Size; weight: string; breed: string; notes: string; color: string };
+const emptyDog = (color: string): DogDraft => ({ name: '', size: 'small', weight: '', breed: '', notes: '', color });
 
 export function DogForm({ initial, onSave, onCancel, saveLabel }: { initial: DogDraft; onSave: (d: DogDraft) => void; onCancel?: () => void; saveLabel: string }) {
   const [d, setD] = useState(initial);
@@ -22,19 +24,20 @@ export function DogForm({ initial, onSave, onCancel, saveLabel }: { initial: Dog
       <Field label="Waga w kg (opcjonalnie)" value={d.weight} onChange={weight => set({ weight })} keyboardType="decimal-pad" />
       <Field label="Rasa (opcjonalnie)" value={d.breed} onChange={breed => set({ breed })} />
       <Field label="Uwagi: karmienie, leki, zachowanie (opcjonalnie)" value={d.notes} onChange={notes => set({ notes })} multiline />
+      <DogColorPicker value={d.color} onChange={color => set({ color })} />
       <Button title={saveLabel} kind="outline" onPress={() => {
         if (!d.name.trim()) return notify('Wpisz imię psa');
         onSave({ ...d, name: d.name.trim() });
-        if (!d.id) setD(emptyDog);
+        if (!d.id) setD(emptyDog(d.color));
       }} />
       {onCancel ? <Button title="Anuluj" kind="outline" onPress={onCancel} /> : null}
     </>
   );
 }
 
-const toDraft = (d: Dog): DogDraft => ({ id: d.id, name: d.name, size: d.size, weight: d.weight ?? '', breed: d.breed ?? '', notes: d.notes ?? '' });
+const toDraft = (d: Dog): DogDraft => ({ id: d.id, name: d.name, size: d.size, weight: d.weight ?? '', breed: d.breed ?? '', notes: d.notes ?? '', color: dogColor(d).id });
 const fromDraft = (ownerId: string, d: DogDraft): Omit<Dog, 'id'> & { id?: string } => ({
-  id: d.id, ownerId, name: d.name, size: d.size,
+  id: d.id, ownerId, name: d.name, size: d.size, color: d.color,
   weight: d.weight.trim() || undefined, breed: d.breed.trim() || undefined, notes: d.notes.trim() || undefined,
 });
 
@@ -92,7 +95,10 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
                 <DogForm initial={toDraft(d)} saveLabel="Zapisz psa" onCancel={() => setEditingDog(null)} onSave={x => { saveDog(fromDraft(owner.id, x)); setEditingDog(null); }} />
               ) : (
                 <>
-                  <H3>🐾 {d.name}</H3>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <DogAvatar dog={d} size={48} />
+                    <H3>{d.name}</H3>
+                  </View>
                   <Note>{sizeLabel[d.size]}{d.weight ? ` · ${d.weight} kg` : ''}{d.breed ? ` · ${d.breed}` : ''}</Note>
                   {d.notes ? <Note>Uwagi: {d.notes}</Note> : null}
                   <Row>
@@ -105,12 +111,12 @@ export function OwnerScreen({ ownerId }: { ownerId?: string }) {
           ))}
           <Panel>
             <H3>Dodaj psa</H3>
-            <DogForm initial={emptyDog} saveLabel="+ Dodaj psa" onSave={x => saveDog(fromDraft(owner.id, x))} />
+            <DogForm key={dogs.length} initial={emptyDog(nextDogColor(db.dogs, owner.id))} saveLabel="+ Dodaj psa" onSave={x => saveDog(fromDraft(owner.id, x))} />
           </Panel>
 
           <H2>Historia pobytów ({history.length})</H2>
           {history.map(b => (
-            <Tile key={b.id} label={`${dogNames(db, b)} · boks ${b.kennel}`} sub={`${displayDate(b.arrival)} – ${displayDate(b.departure)} · ${statusLabel[b.status]}`} onPress={() => router.push(`/pobyt/${b.id}`)} />
+            <Tile key={b.id} leading={<KennelBadge n={b.kennel} />} label={`${dogNames(db, b)} · boks ${b.kennel}`} sub={`${displayDate(b.arrival)} – ${displayDate(b.departure)} · ${statusLabel[b.status]}`} onPress={() => router.push(`/pobyt/${b.id}`)} />
           ))}
           {!history.length ? <Note>Brak pobytów.</Note> : null}
           <Button title="Usuń klienta" kind="danger" onPress={remove} />

@@ -3,6 +3,8 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Vie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors } from './theme';
+import { dogColor, dogPalette, kennelColor } from '../lib/colors';
+import { Dog } from '../lib/types';
 
 export function AppHeader({ title, back }: { title?: string; back?: boolean }) {
   const insets = useSafeAreaInsets();
@@ -109,7 +111,16 @@ export function TimeField({ label, value, onChange }: { label: string; value: st
   return <Field label={`${label} (GG:MM)`} value={value} onChange={onChange} placeholder="10:00" />;
 }
 
-export function Tile({ label, sub, active, onPress, disabled = false, style }: { label: string; sub?: string; active?: boolean; onPress: () => void; disabled?: boolean; style?: ViewStyle }) {
+export function Tile({ label, sub, active, onPress, disabled = false, style, leading, activeColor, tint, borderColor }: {
+  label: string; sub?: string; active?: boolean; onPress: () => void; disabled?: boolean; style?: ViewStyle;
+  /** element po lewej, np. kółko psa albo znaczek boksu */
+  leading?: React.ReactNode;
+  /** kolor tła po zaznaczeniu (domyślnie zielony) */
+  activeColor?: string;
+  /** kolor tła w stanie zwykłym */
+  tint?: string;
+  borderColor?: string;
+}) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -117,11 +128,79 @@ export function Tile({ label, sub, active, onPress, disabled = false, style }: {
       accessibilityState={{ selected: !!active, disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [st.tile, active && st.tileActive, disabled && st.tileDisabled, pressed && { opacity: 0.8 }, style]}
+      style={({ pressed }) => [
+        st.tile,
+        leading ? st.tileRow : null,
+        tint ? { backgroundColor: tint } : null,
+        borderColor ? { borderColor } : null,
+        active && st.tileActive,
+        active && activeColor ? { backgroundColor: activeColor, borderColor: activeColor } : null,
+        disabled && st.tileDisabled,
+        pressed && { opacity: 0.8 },
+        style,
+      ]}
     >
-      <Text style={[st.tileText, active && { color: colors.white }, disabled && { color: colors.disabledText }]}>{label}</Text>
-      {sub ? <Text style={[st.tileSub, active && { color: '#DDECE4' }, disabled && { color: colors.disabledText }]}>{sub}</Text> : null}
+      {leading}
+      <View style={leading ? { flex: 1 } : null}>
+        <Text style={[st.tileText, leading ? { textAlign: 'left' } : null, active && { color: colors.white }, disabled && { color: colors.disabledText }]}>{label}</Text>
+        {sub ? <Text style={[st.tileSub, leading ? { textAlign: 'left' } : null, active && { color: '#F1F5F3' }, disabled && { color: colors.disabledText }]}>{sub}</Text> : null}
+      </View>
     </Pressable>
+  );
+}
+
+/** Kolorowy znaczek z numerem boksu. */
+export function KennelBadge({ n, size = 40, muted = false }: { n: number; size?: number; muted?: boolean }) {
+  const c = kennelColor(n);
+  return (
+    <View accessibilityLabel={`Boks ${n}, kolor ${c.name}`} style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: muted ? '#9AA49D' : c.strong, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: colors.white, fontWeight: '900', fontSize: size * 0.48 }}>{n}</Text>
+    </View>
+  );
+}
+
+/** Kolorowe kółko z pierwszą literą imienia psa. */
+export function DogAvatar({ dog, size = 36 }: { dog: Pick<Dog, 'id' | 'name' | 'color'>; size?: number }) {
+  const c = dogColor(dog);
+  return (
+    <View accessibilityLabel={`${dog.name}, kolor ${c.name}`} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: c.hex, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.white }}>
+      <Text style={{ color: colors.white, fontWeight: '900', fontSize: size * 0.46 }}>{dog.name.trim().charAt(0).toUpperCase() || '?'}</Text>
+    </View>
+  );
+}
+
+/** Kilka nakładających się kółek – psy w jednym pobycie. */
+export function DogAvatars({ dogs, size = 36 }: { dogs: Pick<Dog, 'id' | 'name' | 'color'>[]; size?: number }) {
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      {dogs.map((d, i) => <View key={d.id} style={{ marginLeft: i ? -size * 0.3 : 0 }}><DogAvatar dog={d} size={size} /></View>)}
+    </View>
+  );
+}
+
+/** Wybór koloru psa. */
+export function DogColorPicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  return (
+    <View style={{ gap: 7 }}>
+      <Text style={st.label}>Kolor psa</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        {dogPalette.map(c => {
+          const on = c.id === value;
+          return (
+            <Pressable
+              key={c.id}
+              accessibilityRole="radio"
+              accessibilityLabel={`Kolor ${c.name}`}
+              accessibilityState={{ checked: on }}
+              onPress={() => onChange(c.id)}
+              style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: c.hex, alignItems: 'center', justifyContent: 'center', borderWidth: on ? 4 : 0, borderColor: colors.ink }}
+            >
+              {on ? <Text style={{ color: colors.white, fontSize: 20, fontWeight: '900' }}>✓</Text> : null}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -155,6 +234,7 @@ export const st = StyleSheet.create({
   label: { fontSize: 17, fontWeight: '700', color: colors.ink },
   input: { backgroundColor: colors.white, borderColor: colors.inputBorder, borderWidth: 1.5, borderRadius: 13, minHeight: 60, paddingHorizontal: 15, fontSize: 19, color: colors.ink },
   tile: { borderWidth: 1.5, borderColor: '#9DB7A7', backgroundColor: colors.white, borderRadius: 13, minHeight: 58, padding: 9, justifyContent: 'center', alignItems: 'center' },
+  tileRow: { flexDirection: 'row', justifyContent: 'flex-start', gap: 12, paddingHorizontal: 12 },
   tileActive: { backgroundColor: colors.green, borderColor: colors.green },
   tileDisabled: { backgroundColor: colors.disabled, borderColor: '#C7CDC8' },
   tileText: { color: colors.ink, fontSize: 17, fontWeight: '700', textAlign: 'center' },

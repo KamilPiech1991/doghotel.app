@@ -25,10 +25,10 @@ export const demoDb = (): DB => {
     { id: 'o3', name: 'Maria Wiśniewska', phone: '503 400 500' },
   ];
   db.dogs = [
-    { id: 'd1', ownerId: 'o1', name: 'Luna', size: 'small', weight: '6' },
-    { id: 'd2', ownerId: 'o1', name: 'Borys', size: 'large', weight: '32' },
-    { id: 'd3', ownerId: 'o2', name: 'Reksio', size: 'medium' },
-    { id: 'd4', ownerId: 'o3', name: 'Figa', size: 'small', notes: 'Karma własna, 2× dziennie' },
+    { id: 'd1', ownerId: 'o1', name: 'Luna', size: 'small', weight: '6', color: 'pink' },
+    { id: 'd2', ownerId: 'o1', name: 'Borys', size: 'large', weight: '32', color: 'brown' },
+    { id: 'd3', ownerId: 'o2', name: 'Reksio', size: 'medium', color: 'orange' },
+    { id: 'd4', ownerId: 'o3', name: 'Figa', size: 'small', notes: 'Karma własna, 2× dziennie', color: 'violet' },
   ];
   const mk = (id: string, ownerId: string, dogIds: string[], kennel: number, a: number, at: string, d: number, dt: string, status: DB['bookings'][0]['status']) => {
     const arrival = parseLocal(plusDays(t, a), at)!;

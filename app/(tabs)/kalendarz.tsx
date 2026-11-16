@@ -5,7 +5,8 @@ import { useStore } from '../../src/store';
 import { bookingsOnDay, dogNames, kennelNumbers } from '../../src/lib/booking';
 import { displayDate, displayDay, displayShort, plusDays, today, weekdayShort, weekStart } from '../../src/lib/dates';
 import { statusLabel } from '../../src/lib/types';
-import { Button, DateField, H2, H3, Note, Panel, Row, Screen, Tile } from '../../src/ui/components';
+import { Button, DateField, DogAvatars, H2, H3, KennelBadge, Note, Panel, Row, Screen, Tile } from '../../src/ui/components';
+import { dogColor, kennelColor } from '../../src/lib/colors';
 import { colors } from '../../src/ui/theme';
 
 export default function Calendar() {
@@ -40,10 +41,13 @@ export default function Calendar() {
         {kennelNumbers(db).map(k => {
           const bs = list.filter(b => b.kennel === k);
           return (
-            <Panel key={k} style={{ backgroundColor: bs.length ? '#EEF0EE' : colors.greenLight, borderColor: bs.length ? '#A8B1A9' : colors.greenBorder, padding: 12, gap: 8 }}>
-              <H3>Boks {k} · {bs.length ? 'zajęty' : 'wolny'}</H3>
+            <Panel key={k} style={{ backgroundColor: kennelColor(k).light, borderColor: kennelColor(k).strong, borderLeftWidth: 8, padding: 12, gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <KennelBadge n={k} />
+                <H3>Boks {k} · {bs.length ? 'zajęty' : 'wolny'}</H3>
+              </View>
               {bs.map(b => (
-                <Tile key={b.id} label={dogNames(db, b)} sub={`${displayDate(b.arrival)} – ${displayDate(b.departure)} · ${statusLabel[b.status]}`} onPress={() => router.push(`/pobyt/${b.id}`)} />
+                <Tile key={b.id} leading={<DogAvatars dogs={db.dogs.filter(d => b.dogIds.includes(d.id))} />} label={dogNames(db, b)} sub={`${displayDate(b.arrival)} – ${displayDate(b.departure)} · ${statusLabel[b.status]}`} onPress={() => router.push(`/pobyt/${b.id}`)} />
               ))}
               {!bs.length ? <Button title="+ Zarezerwuj ten boks" kind="outline" onPress={() => onNew(k, day)} /> : null}
             </Panel>
@@ -74,37 +78,28 @@ export default function Calendar() {
           </View>
           {kennelNumbers(db).map(k => (
             <View key={k} style={{ flexDirection: 'row', gap: 3 }}>
-              <View style={{ width: 34, justifyContent: 'center' }}><Text style={{ fontSize: 16, fontWeight: '900', color: colors.ink }}>{k}</Text></View>
+              <View style={{ width: 34, justifyContent: 'center' }}><KennelBadge n={k} size={30} /></View>
               {days.map((d, i) => {
                 const b = perDay[i].find(x => x.kennel === k);
+                const firstDog = b ? db.dogs.find(d => d.id === b.dogIds[0]) : undefined;
+                const kc = kennelColor(k);
                 return (
                   <Pressable
                     key={d}
                     accessibilityRole="button"
                     accessibilityLabel={b ? `Boks ${k}, ${displayDay(d)}: ${dogNames(db, b)}` : `Boks ${k}, ${displayDay(d)}: wolny`}
                     onPress={() => (b ? router.push(`/pobyt/${b.id}`) : onNew(k, d))}
-                    style={{ flex: 1, minHeight: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center', backgroundColor: b ? (b.status === 'checked_in' ? colors.green : '#7FA892') : colors.greenLight, borderWidth: 1, borderColor: b ? 'transparent' : colors.greenBorder }}
+                    style={{ flex: 1, minHeight: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center', backgroundColor: b ? (firstDog ? dogColor(firstDog).hex : kc.strong) : kc.light, borderWidth: b ? 2 : 1, borderColor: b ? kc.strong : kc.border }}
                   >
-                    <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: b ? colors.white : colors.muted }}>{b ? dogNames(db, b).split(',')[0].slice(0, 6) : ''}</Text>
+                    <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: b ? colors.white : colors.muted }}>{b ? `${b.status === 'checked_in' ? '✓' : ''}${dogNames(db, b).split(',')[0].slice(0, 6)}` : ''}</Text>
                   </Pressable>
                 );
               })}
             </View>
           ))}
         </Panel>
-        <Row>
-          <Legend color={colors.green} label="Na miejscu" />
-          <Legend color="#7FA892" label="Zarezerwowany" />
-          <Legend color={colors.greenLight} label="Wolny" />
-        </Row>
+        <Note>Wiersz = boks w swoim kolorze. Zajęte pole ma kolor psa, „✓” oznacza, że pies jest już na miejscu. Jasne pole jest wolne.</Note>
       </>
     );
   }
 }
-
-const Legend = ({ color, label }: { color: string; label: string }) => (
-  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-    <View style={{ width: 18, height: 18, borderRadius: 4, backgroundColor: color, borderWidth: 1, borderColor: colors.greenBorder }} />
-    <Text style={{ fontSize: 14, color: colors.muted }}>{label}</Text>
-  </View>
-);

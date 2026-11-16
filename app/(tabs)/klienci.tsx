@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useStore } from '../../src/store';
 import { sizeLabel } from '../../src/lib/types';
-import { Button, Field, H1, Note, Screen, Tile } from '../../src/ui/components';
+import { Button, DogAvatars, Field, H1, Note, Screen, Tile } from '../../src/ui/components';
 
 export default function Clients() {
   const { db } = useStore();
@@ -22,6 +22,7 @@ export default function Clients() {
         return (
           <Tile
             key={o.id}
+            leading={dogs.length ? <DogAvatars dogs={dogs} size={38} /> : undefined}
             label={o.name}
             sub={`${o.phone || 'brak telefonu'} · ${dogs.length ? dogs.map(d => `${d.name} (${sizeLabel[d.size].toLowerCase()})`).join(', ') : 'brak psów'}`}
             onPress={() => router.push(`/klient/${o.id}`)}

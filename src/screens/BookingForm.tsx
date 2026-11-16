@@ -7,7 +7,8 @@ import { displayDate, isValidDateKey, localDateKey, localTime, parseLocal, plura
 import { depositFor, quote } from '../lib/pricing';
 import { Booking, Size, sizeLabel, sizes, uid } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
-import { Button, DateField, Field, H1, H2, H3, Note, Panel, Row, Screen, st, Tile, TimeField, Warning } from '../ui/components';
+import { Button, DateField, DogAvatar, DogColorPicker, Field, H1, H2, H3, Note, Panel, Row, Screen, st, Tile, TimeField, Warning } from '../ui/components';
+import { dogColor, kennelColor, nextDogColor } from '../lib/colors';
 import { colors } from '../ui/theme';
 
 const arrivalHours = ['08:00', '10:00', '12:00', '15:00'];
@@ -29,7 +30,7 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
   const [ownerSearch, setOwnerSearch] = useState('');
   const [changingOwner, setChangingOwner] = useState(!ownerId);
   const [newOwner, setNewOwner] = useState({ name: '', phone: '' });
-  const [newDog, setNewDog] = useState<{ name: string; size: Size; weight: string }>({ name: '', size: 'small', weight: '' });
+  const [newDog, setNewDog] = useState<{ name: string; size: Size; weight: string; color: string | null }>({ name: '', size: 'small', weight: '', color: null });
 
   const arrival = parseLocal(arrivalDate, arrivalTime);
   const departure = parseLocal(departureDate, departureTime);
@@ -57,9 +58,9 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
   const addDog = () => {
     if (!ownerId) return notify('Najpierw wybierz klienta');
     if (!newDog.name.trim()) return notify('Wpisz imię psa');
-    const id = saveDog({ ownerId, name: newDog.name.trim(), size: newDog.size, weight: newDog.weight.trim() || undefined });
+    const id = saveDog({ ownerId, name: newDog.name.trim(), size: newDog.size, weight: newDog.weight.trim() || undefined, color: newDog.color ?? nextDogColor(db.dogs, ownerId) });
     setDogIds(p => [...p, id]);
-    setNewDog({ name: '', size: 'small', weight: '' });
+    setNewDog({ name: '', size: 'small', weight: '', color: null });
   };
 
   const save = async () => {
@@ -120,7 +121,7 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
         <>
           {ownerDogs.map(d => {
             const on = dogIds.includes(d.id);
-            return <Tile key={d.id} label={`${on ? '✓ ' : ''}${d.name}`} sub={`${sizeLabel[d.size]}${d.weight ? ` · ${d.weight} kg` : ''}`} active={on} onPress={() => setDogIds(p => (on ? p.filter(x => x !== d.id) : [...p, d.id]))} />;
+            return <Tile key={d.id} leading={<DogAvatar dog={d} size={40} />} activeColor={dogColor(d).hex} label={`${on ? '✓ ' : ''}${d.name}`} sub={`${sizeLabel[d.size]}${d.weight ? ` · ${d.weight} kg` : ''}`} active={on} onPress={() => setDogIds(p => (on ? p.filter(x => x !== d.id) : [...p, d.id]))} />;
           })}
           {!ownerDogs.length ? <Note>Ten klient nie ma jeszcze psów – dodaj poniżej.</Note> : null}
           <Panel>
@@ -129,6 +130,7 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
             <Text style={st.label}>Wielkość (wymagana)</Text>
             <Row>{sizes.map(s => <Tile key={s} label={sizeLabel[s]} active={newDog.size === s} onPress={() => setNewDog(p => ({ ...p, size: s }))} style={{ flex: 1 }} />)}</Row>
             <Field label="Waga w kg (opcjonalnie)" value={newDog.weight} onChange={weight => setNewDog(p => ({ ...p, weight }))} keyboardType="decimal-pad" />
+            <DogColorPicker value={newDog.color ?? nextDogColor(db.dogs, ownerId)} onChange={color => setNewDog(p => ({ ...p, color }))} />
             <Button title="+ Dodaj i zaznacz psa" kind="outline" onPress={addDog} />
           </Panel>
         </>
@@ -153,11 +155,12 @@ export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?
       <Row style={{ justifyContent: 'space-between' }}>
         {kennelNumbers(db).map(k => {
           const isFree = free.includes(k);
-          return <Tile key={k} label={`Boks ${k}`} sub={intervalOk ? (isFree ? 'wolny' : 'zajęty') : '—'} active={kennel === k} disabled={!isFree} onPress={() => setKennel(k)} style={{ width: '31%' }} />;
+          const c = kennelColor(k);
+          return <Tile key={k} label={`Boks ${k}`} sub={intervalOk ? (isFree ? 'wolny' : 'zajęty') : '—'} tint={c.light} borderColor={c.strong} activeColor={c.strong} active={kennel === k} disabled={!isFree} onPress={() => setKennel(k)} style={{ width: '31%', borderWidth: kennel === k ? 3 : 2 }} />;
         })}
       </Row>
       {kennelTaken ? <Warning>Wybrany boks {kennel} jest zajęty w tym terminie – wybierz inny.</Warning> : null}
-      <Note>Szare boksy są zajęte (z uwzględnieniem {db.settings.cleaningMinutes} min na sprzątanie).</Note>
+      <Note>Każdy boks ma swój kolor. Szare boksy są zajęte (z uwzględnieniem {db.settings.cleaningMinutes} min na sprzątanie).</Note>
 
       <H2>5. Uwagi do pobytu</H2>
       <Field label="Karmienie, leki, kontakt awaryjny (opcjonalnie)" value={notes} onChange={setNotes} multiline />

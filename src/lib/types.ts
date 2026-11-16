@@ -15,6 +15,8 @@ export type Dog = {
   weight?: string;
   breed?: string;
   notes?: string;
+  /** id koloru z dogPalette (src/lib/colors.ts) */
+  color?: string;
 };
 
 export type BookingStatus = 'reserved' | 'checked_in' | 'checked_out' | 'cancelled';
