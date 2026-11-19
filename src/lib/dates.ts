@@ -93,5 +93,5 @@ export const plural = (n: number, one: string, few: string, many: string) => {
 /** 1234.5 → „1234,50 zł” */
 export const pln = (n: number) => `${n.toFixed(2).replace('.', ',')} zł`;
 
-/** Godziny przyjazdu i odbioru do wyboru: od 08:00 do 20:30 co 30 minut. */
-export const hourOptions = Array.from({ length: 26 }, (_, i) => `${pad(8 + Math.floor(i / 2))}:${i % 2 ? '30' : '00'}`);
+/** Godziny przyjazdu i odbioru do wyboru: od 08:30 do 20:30 co 30 minut. */
+export const hourOptions = Array.from({ length: 25 }, (_, i) => `${pad(8 + Math.floor((i + 1) / 2))}:${i % 2 ? '00' : '30'}`);

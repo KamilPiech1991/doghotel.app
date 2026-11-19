@@ -50,10 +50,11 @@ describe('eksport klientów do Excela', () => {
 });
 
 describe('godziny do wyboru', () => {
-  it('od 08:00 do 20:30 co 30 minut', () => {
-    expect(hourOptions[0]).toBe('08:00');
-    expect(hourOptions[1]).toBe('08:30');
+  it('od 08:30 do 20:30 co 30 minut', () => {
+    expect(hourOptions[0]).toBe('08:30');
+    expect(hourOptions[1]).toBe('09:00');
+    expect(hourOptions).toContain('15:00');
     expect(hourOptions.at(-1)).toBe('20:30');
-    expect(hourOptions).toHaveLength(26);
+    expect(hourOptions).toHaveLength(25);
   });
 });
