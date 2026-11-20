@@ -3,7 +3,7 @@ import { Text } from 'react-native';
 import { router } from 'expo-router';
 import { useStore } from '../store';
 import { freeKennels, kennelNumbers, validateBooking } from '../lib/booking';
-import { displayDate, isValidDateKey, localDateKey, localTime, parseLocal, plural, pln, plusDays, today } from '../lib/dates';
+import { displayDate, isValidDateKey, isValidTime, localDateKey, localTime, parseLocal, plural, pln, plusDays, today } from '../lib/dates';
 import { depositFor, quote } from '../lib/pricing';
 import { Booking, Size, sizeLabel, sizes, uid } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
@@ -12,17 +12,20 @@ import { dogColor, kennelColor, nextDogColor } from '../lib/colors';
 import { colors } from '../ui/theme';
 
 
-export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?: { ownerId?: string; kennel?: number; date?: string } }) {
+type Preset = { ownerId?: string; kennel?: number; date?: string; dogIds?: string[]; arrivalTime?: string; departureDate?: string; departureTime?: string };
+
+export function BookingForm({ bookingId, preset }: { bookingId?: string; preset?: Preset }) {
   const { db, saveBooking, saveOwner, saveDog } = useStore();
   const editing = db.bookings.find(b => b.id === bookingId);
   const startDay = preset?.date && isValidDateKey(preset.date) ? preset.date : today();
 
   const [ownerId, setOwnerId] = useState(editing?.ownerId ?? preset?.ownerId ?? '');
-  const [dogIds, setDogIds] = useState<string[]>(editing?.dogIds ?? []);
+  const presetDogs = (preset?.dogIds ?? []).filter(id => db.dogs.find(d => d.id === id)?.ownerId === preset?.ownerId);
+  const [dogIds, setDogIds] = useState<string[]>(editing?.dogIds ?? presetDogs);
   const [arrivalDate, setArrivalDate] = useState(editing ? localDateKey(editing.arrival) : startDay);
-  const [arrivalTime, setArrivalTime] = useState(editing ? localTime(editing.arrival) : '10:00');
-  const [departureDate, setDepartureDate] = useState(editing ? localDateKey(editing.departure) : plusDays(startDay, 2));
-  const [departureTime, setDepartureTime] = useState(editing ? localTime(editing.departure) : '15:00');
+  const [arrivalTime, setArrivalTime] = useState(editing ? localTime(editing.arrival) : preset?.arrivalTime && isValidTime(preset.arrivalTime) ? preset.arrivalTime : '10:00');
+  const [departureDate, setDepartureDate] = useState(editing ? localDateKey(editing.departure) : preset?.departureDate && isValidDateKey(preset.departureDate) ? preset.departureDate : plusDays(startDay, 2));
+  const [departureTime, setDepartureTime] = useState(editing ? localTime(editing.departure) : preset?.departureTime && isValidTime(preset.departureTime) ? preset.departureTime : '15:00');
   const [kennel, setKennel] = useState<number | null>(editing?.kennel ?? preset?.kennel ?? null);
   const [notes, setNotes] = useState(editing?.notes ?? '');
   const [ownerSearch, setOwnerSearch] = useState('');
