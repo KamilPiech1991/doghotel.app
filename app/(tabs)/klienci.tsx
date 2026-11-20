@@ -1,12 +1,29 @@
 import { useState } from 'react';
+import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useStore } from '../../src/store';
 import { sizeLabel } from '../../src/lib/types';
 import { Button, DogAvatars, Field, H1, Note, Screen, Tile } from '../../src/ui/components';
+import { buildClientExport, exportFileName } from '../../src/lib/exportClients';
+import { today } from '../../src/lib/dates';
+import { notify } from '../../src/ui/dialog';
 
 export default function Clients() {
   const { db } = useStore();
   const [search, setSearch] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  const exportExcel = async () => {
+    setExporting(true);
+    try {
+      const { downloadClientsXlsx } = await import('../../src/lib/backupWeb');
+      await downloadClientsXlsx(buildClientExport(db), exportFileName(today()));
+    } catch {
+      notify('Nie udało się utworzyć pliku', 'Spróbuj ponownie. Jeśli błąd się powtarza, użyj kopii zapasowej w Ustawieniach.');
+    } finally {
+      setExporting(false);
+    }
+  };
   const q = search.trim().toLowerCase();
   const list = db.owners
     .filter(o => `${o.name} ${o.phone} ${db.dogs.filter(d => d.ownerId === o.id).map(d => d.name).join(' ')}`.toLowerCase().includes(q))
@@ -16,6 +33,9 @@ export default function Clients() {
     <Screen title="Klienci i pieski">
       <H1>Klienci</H1>
       <Button title="＋ Nowy klient" onPress={() => router.push('/klient/nowy')} />
+      {Platform.OS === 'web' && db.owners.length ? (
+        <Button title={exporting ? 'Tworzenie pliku…' : '⬇ Eksportuj do Excela'} kind="outline" disabled={exporting} onPress={exportExcel} />
+      ) : null}
       <Field label="Szukaj po nazwisku, telefonie lub imieniu psa" value={search} onChange={setSearch} placeholder="np. Kowalska albo Luna" />
       {list.map(o => {
         const dogs = db.dogs.filter(d => d.ownerId === o.id);

@@ -6,7 +6,7 @@ import { canDeleteDog, canDeleteOwner, dogNames } from '../lib/booking';
 import { displayDate } from '../lib/dates';
 import { Dog, Size, sizeLabel, sizes, statusLabel } from '../lib/types';
 import { confirm, notify } from '../ui/dialog';
-import { Button, DogAvatar, DogColorPicker, Field, H1, H2, H3, KennelBadge, Note, Panel, Row, Screen, st, Tile } from '../ui/components';
+import { Button, DogAvatar, Field, H1, H2, H3, KennelBadge, Note, Panel, Row, Screen, st, Tile } from '../ui/components';
 import { dogColor, nextDogColor } from '../lib/colors';
 import { dogStays } from '../lib/history';
 import { View } from 'react-native';
@@ -25,7 +25,6 @@ export function DogForm({ initial, onSave, onCancel, saveLabel }: { initial: Dog
       <Field label="Waga w kg (opcjonalnie)" value={d.weight} onChange={weight => set({ weight })} keyboardType="decimal-pad" />
       <Field label="Rasa (opcjonalnie)" value={d.breed} onChange={breed => set({ breed })} />
       <Field label="Uwagi: karmienie, leki, zachowanie (opcjonalnie)" value={d.notes} onChange={notes => set({ notes })} multiline />
-      <DogColorPicker value={d.color} onChange={color => set({ color })} />
       <Button title={saveLabel} kind="outline" onPress={async () => {
         if (!d.name.trim()) return notify('Wpisz imię psa');
         const ok = await onSave({ ...d, name: d.name.trim() });

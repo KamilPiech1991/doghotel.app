@@ -60,8 +60,13 @@ Kopia zapasowa: Supabase w planie darmowym nie robi kopii do pobrania – co jak
 - **Kalendarz:** widok dnia (boksy 1–9) i tygodnia (siatka boks × dzień); dotknięcie wolnego pola tworzy rezerwację.
 - **Historia:** wszystkie pobyty od początku (także zakończone i anulowane), wyszukiwanie, filtry, miesiące,
   podsumowanie przychodu i wpłat.
-- **Klienci:** wyszukiwanie, karta klienta z psami (wielkość, waga, rasa, uwagi), historia pobytów, edycja i usuwanie.
-- **Pobyt:** wybór klienta i psów (1–2), terminu, wolnego boksu, uwagi, wycena z zaliczką; potwierdzanie przyjazdu/odbioru,
+- **Klienci:** eksport listy klientów i psów do Excela (.xlsx), wyszukiwanie, karta klienta z psami (wielkość, waga, rasa, uwagi), historia pobytów, edycja i usuwanie.
+- **Rezerwacja głosowa (🎙 na ekranie Start):** powiedz imię psa i termin, np. „Luna od piątku do niedzieli”,
+  „Reksio od 22 grudnia do 28 grudnia o 10”, „Lunę i Borysa od jutra na 3 dni, boks 4”. Aplikacja pokazuje
+  rozpoznanego psa, daty, boks (podany albo pierwszy wolny) i cenę – zapis dopiero po potwierdzeniu.
+  Działa w Chrome (Android) i Safari (iPhone); gdzie brak rozpoznawania mowy, można dyktować do pola tekstowego
+  mikrofonem z klawiatury. Rozumienie zdania: `src/lib/voice.ts`.
+- **Pobyt:** wybór klienta i psów (1–2), terminu (godziny przyjazdu i odbioru 08:30–20:30 co 30 min), wolnego boksu, uwagi, wycena z zaliczką; potwierdzanie przyjazdu/odbioru,
   wpłaty, edycja, anulowanie i przywracanie.
 - **Ustawienia:** cennik, zaliczka, czas na sprzątanie boksu, kopia zapasowa, dane przykładowe.
 

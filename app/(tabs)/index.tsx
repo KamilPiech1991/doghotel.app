@@ -19,7 +19,8 @@ export default function Start() {
     <Screen>
       <H1>Dzień dobry!</H1>
       <Note>{displayDay(t)}</Note>
-      <Button title="＋ Nowy pobyt" onPress={() => router.push('/pobyt/nowy')} />
+      <Button title="🎙 Rezerwacja głosowa" onPress={() => router.push('/glos')} />
+      <Button title="＋ Nowy pobyt" kind="outline" onPress={() => router.push('/pobyt/nowy')} />
 
       {empty ? (
         <Panel>
